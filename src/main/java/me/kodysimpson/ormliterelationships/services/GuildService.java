@@ -30,29 +30,25 @@ public class GuildService {
         }
     }
 
-    public Guild createGuild(GuildPlayer player, String name) throws SQLException {
-        return TransactionManager.callInTransaction(guildDao.getConnectionSource(),
-                new Callable<Guild>() {
-                    @Override
-                    public Guild call() throws Exception {
+    public Guild createGuildFromPlayer(GuildPlayer player, String name) throws SQLException {
+        return TransactionManager.callInTransaction(guildDao.getConnectionSource(), new Callable<Guild>() {
+            @Override
+            public Guild call() throws Exception {
 
-                        // Check if a guild with the same name already exists
-                        if (findByName(name) != null){
-                            return null;
-                        }
-
-                        //create the new guild
-                        Guild guild = new Guild(name);
-                        guild = create(guild);
-
-                        //add the player to the guild by updating the player
-                        player.setGuild(guild);
-                        playerDao.create(player);
-
-                        return guild;
-                    }
+                if (findByName(name) != null){
+                    return null;
                 }
-        );
+
+                Guild guild = new Guild(name);
+                guild = create(guild);
+
+                //add the player
+                player.setGuild(guild);
+                playerDao.update(player);
+
+                return guild;
+            }
+        });
     }
 
     public Guild findByName(String name){
